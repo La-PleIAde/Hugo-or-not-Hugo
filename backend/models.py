@@ -39,6 +39,7 @@ class Participant(AutoIncrementModel):
 class Paragraph(AutoIncrementModel):
     _counter: ClassVar[int] = 0
 
+    file: str
     text: str
     category: ParagraphCategory
     author: Author
@@ -48,9 +49,19 @@ class Paragraph(AutoIncrementModel):
         return self.author == Author.hugo
 
     @classmethod
-    def from_category(cls, category: ParagraphCategory) -> 'Paragraph':
+    def from_category(cls, category: ParagraphCategory, used_files=None) -> 'Paragraph':
+        if not category in ParagraphCategory.__members__.values():
+            raise ValueError(f'Invalid paragraph category "{category}"')
+
         directory = str(os.path.join(DATA_PATH, category.value))
-        file = random.choice(os.listdir(directory))
+
+        # Filter out files that are already used if used_files is provided
+        files = [f for f in os.listdir(directory) if f not in (used_files or set())]
+
+        if not files:
+            raise ValueError(f"No available paragraphs in category {category} that haven't been used.")
+
+        file = random.choice(files)
 
         with open(os.path.join(directory, file), 'r', encoding='utf-8') as f:
             text = f.read().strip()
@@ -60,7 +71,11 @@ class Paragraph(AutoIncrementModel):
         else:
             author = Author.genai
 
-        return cls(text=text, category=category, author=author)
+        # Add selected file to used_files to avoid re-selection
+        if used_files is not None:
+            used_files.add(file)
+
+        return cls(file=file, text=text, category=category, author=author)
 
 
 class Question(AutoIncrementModel):
@@ -69,6 +84,30 @@ class Question(AutoIncrementModel):
     category: QuestionCategory
     left: Paragraph
     right: Paragraph
+
+    @classmethod
+    def from_category(cls, category: QuestionCategory, used_files) -> 'Question':
+        if not category in QuestionCategory.__members__.values():
+            raise ValueError(f'Invalid question category "{category}"')
+
+        paragraph_mapping = {
+            QuestionCategory.A: ParagraphCategory.other,
+            QuestionCategory.B: ParagraphCategory.neutralized,
+            QuestionCategory.C: ParagraphCategory.other2hugo,
+            QuestionCategory.D: ParagraphCategory.restored,
+        }
+
+        if category == QuestionCategory.E:
+            p_category = random.choice(list(ParagraphCategory))
+            p1 = Paragraph.from_category(p_category)
+            p2 = Paragraph.from_category(p_category)
+        else:
+            p1 = Paragraph.from_category(ParagraphCategory.hugo, used_files=used_files)
+            p2 = Paragraph.from_category(paragraph_mapping.get(category))
+
+        left, right = random.sample([p1, p2], k=2)
+
+        return cls(category=category, left=left, right=right)
 
 
 class Answer(AutoIncrementModel):
