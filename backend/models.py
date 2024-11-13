@@ -2,7 +2,7 @@ import os
 import random
 
 from pydantic import BaseModel, Field
-from typing import ClassVar
+from typing import ClassVar, Set
 
 from __root__ import DATA_PATH
 from backend.enums import (
@@ -49,7 +49,7 @@ class Paragraph(AutoIncrementModel):
         return self.author == Author.hugo
 
     @classmethod
-    def from_category(cls, category: ParagraphCategory, used_files=None) -> 'Paragraph':
+    def from_category(cls, category: ParagraphCategory, used_files: Set[str] = None) -> 'Paragraph':
         if not category in ParagraphCategory.__members__.values():
             raise ValueError(f'Invalid paragraph category "{category}"')
 
@@ -86,7 +86,7 @@ class Question(AutoIncrementModel):
     right: Paragraph
 
     @classmethod
-    def from_category(cls, category: QuestionCategory, used_files) -> 'Question':
+    def from_category(cls, category: QuestionCategory, used_files: Set[str] = None) -> 'Question':
         if not category in QuestionCategory.__members__.values():
             raise ValueError(f'Invalid question category "{category}"')
 
