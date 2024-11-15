@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Victor Hugo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Welcome Page -->
+        <div id="welcome-page">
+            <h1>Bienvenue au Quiz</h1>
+            <form id="participant-form">
+                <label for="age">Âge :</label>
+                <select id="age" required>
+                    <option value="17 ans ou moins">17 ans ou moins</option>
+                    <option value="18-20">18-20</option>
+                    <option value="21-29">21-29</option>
+                    <option value="30-39">30-39</option>
+                    <option value="40-49">40-49</option>
+                    <option value="50-59">50-59</option>
+                    <option value="60 ans ou plus">60 ans ou plus</option>
+                </select>
+
+                <label for="education">Niveau d'éducation :</label>
+                <select id="education" required>
+                    <option value="Inférieur au diplôme d'études secondaires">Inférieur au diplôme d'études secondaires</option>
+                    <option value="Diplôme d'études secondaires ou équivalent">Diplôme d'études secondaires ou équivalent</option>
+                    <option value=" A fait des études supérieures, mais pas de diplôme">A fait des études supérieures, mais pas de diplôme</option>
+                    <option value="DUT/BTS">DUT/BTS</option>
+                    <option value="Licence">Licence</option>
+                    <option value="Diplôme d’études supérieures (master, doctorat...)">Diplôme d’études supérieures (master, doctorat...)</option>
+                </select>
+
+                <label>Connaissance de Victor Hugo :</label>
+                <select id="familiarity" required>
+                    <option value="Très peu familier">Très peu familier</option>
+                    <option value="Peu familier">Peu familier</option>
+                    <option value="Neutre">Neutre</option>
+                    <option value="Familier">Familier</option>
+                    <option value="Très familier">Très familier</option>
+                </select>
+
+                <label>Avez-vous étudié la littérature française ?</label>
+                <input type="checkbox" id="studied" />
+
+                <button type="submit">Commencer</button>
+            </form>
+        </div>
+
+        <!-- Quiz Page -->
+        <div id="quiz-page" style="display: none;">
+            <h1>Questionnaire</h1>
+            <p id="progress">Question <span id="current-question">0</span> / <span id="total-questions">0</span></p>
+            <div id="question-container">
+                <p id="question-category"></p>
+                <div>
+                    <p id="left-text"></p>
+                    <p id="right-text"></p>
+                </div>
+                <label>
+                    <input type="radio" name="choice" value="left" required>
+                    Gauche
+                </label>
+                <label>
+                    <input type="radio" name="choice" value="right" required>
+                    Droite
+                </label>
+            </div>
+            <button id="next-btn">Suivant</button>
+        </div>
+
+        <!-- Thank You Page -->
+        <div id="thank-you-page" style="display: none;">
+            <h1>Merci d'avoir participé !</h1>
+            <p>Vos réponses ont été enregistrées avec succès.</p>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
