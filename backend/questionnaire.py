@@ -9,7 +9,7 @@ DEFAULT_QUESTIONS_DISTRIBUTION = {
     QuestionCategory.B: 2,
     QuestionCategory.C: 4,
     QuestionCategory.D: 4,
-    QuestionCategory.E: 2
+    QuestionCategory.E: 0
 }
 
 
