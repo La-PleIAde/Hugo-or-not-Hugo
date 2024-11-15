@@ -62,7 +62,8 @@ document.getElementById('next-btn').addEventListener('click', async () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            question_id: currentQuestionIndex + 1,
+            question_id: questions[currentQuestionIndex].id,
+            participant_id: participantId,
             choice,
         }),
     });

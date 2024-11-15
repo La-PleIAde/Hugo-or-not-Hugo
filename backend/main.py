@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from starlette_admin.contrib.sqla import Admin, ModelView
 
 from backend.database import SessionLocal, engine
-from backend.db_models import Base, Participant, Answer
+from backend.db_models import Base, Participant, Answer, Question, Paragraph
 from backend.questionnaire import Questionnaire
 from backend.schemas import ParticipantCreate, AnswerCreate
 
@@ -19,6 +19,8 @@ admin = Admin(engine, title="Example: SQLAlchemy")
 # Add view
 admin.add_view(ModelView(Participant))
 admin.add_view(ModelView(Answer))
+admin.add_view(ModelView(Question))
+admin.add_view(ModelView(Paragraph))
 
 # Mount admin to your app
 admin.mount_to(app)
@@ -42,7 +44,7 @@ def get_db():
 
 @app.post("/api/v1/participants/")
 def create_participant(participant: ParticipantCreate, db: Session = Depends(get_db)):
-    db_participant = Participant(**participant.dict())
+    db_participant = Participant(**participant.model_dump())
     db.add(db_participant)
     db.commit()
     db.refresh(db_participant)
@@ -55,19 +57,49 @@ def get_questionnaire(data: dict, db: Session = Depends(get_db)):
     if not db_participant:
         raise HTTPException(status_code=404, detail="Participant not found")
 
-    questionnaire = Questionnaire()
+    # Generate the questionnaire using the existing logic
+    questionnaire = Questionnaire()  # Assumes this generates questions and associates paragraphs
+
     questions = []
     for question in questionnaire:
+        # Save Paragraphs to DB if not already saved
+        for paragraph in [question.left, question.right]:
+            db_paragraph = db.query(Paragraph).filter_by(file=paragraph.file).first()
+            if not db_paragraph:
+                db_paragraph = Paragraph(
+                    file=paragraph.file,
+                    text=paragraph.text,
+                    category=paragraph.category,
+                    author=paragraph.author,
+                )
+                db.add(db_paragraph)
+                db.commit()
+                db.refresh(db_paragraph)
+            paragraph.id = db_paragraph.id  # Ensure question object has correct IDs
+
+        # Save Question to DB
+        db_question = Question(
+            category=question.category,
+            left_paragraph_id=question.left.id,
+            right_paragraph_id=question.right.id,
+        )
+        db.add(db_question)
+        db.commit()
+        db.refresh(db_question)
+
+        # Add to response
         questions.append({
-            "category": question.category.value,
+            "id": db_question.id,
+            "category": db_question.category.value,
             "left": question.left.text,
             "right": question.right.text,
         })
+
     return {"questions": questions}
 
 @app.post("/api/v1/answers/")
 def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
-    db_answer = Answer(**answer.dict())
+    db_answer = Answer(**answer.model_dump())
     db.add(db_answer)
     db.commit()
     db.refresh(db_answer)

@@ -10,4 +10,5 @@ class ParticipantCreate(BaseModel):
 
 class AnswerCreate(BaseModel):
     question_id: int
+    participant_id: int
     choice: Choice

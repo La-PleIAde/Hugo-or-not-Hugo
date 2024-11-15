@@ -44,3 +44,6 @@ class Answer(Base):
     question_id = Column(Integer, ForeignKey("questions.id"))
     participant_id = Column(Integer, ForeignKey("participants.id"))
     choice = Column(Enum(Choice), nullable=False)
+
+    question = relationship("Question", foreign_keys=[question_id])
+    participant = relationship("Participant", foreign_keys=[participant_id])
