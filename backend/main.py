@@ -1,17 +1,29 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from starlette_admin.contrib.sqla import Admin, ModelView
 
 from backend.database import SessionLocal, engine
 from backend.db_models import Base, Participant, Answer
-from backend.schemas import ParticipantCreate, AnswerCreate
 from backend.questionnaire import Questionnaire
+from backend.schemas import ParticipantCreate, AnswerCreate
 
 app = FastAPI()
 
+# Create all database tables
 Base.metadata.create_all(bind=engine)
 
+# Create admin
+admin = Admin(engine, title="Example: SQLAlchemy")
 
+# Add view
+admin.add_view(ModelView(Participant))
+admin.add_view(ModelView(Answer))
+
+# Mount admin to your app
+admin.mount_to(app)
+
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins. Replace with specific origins in production.
@@ -20,8 +32,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-
-# Dependency
+# Dependency to get DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -36,7 +47,6 @@ def create_participant(participant: ParticipantCreate, db: Session = Depends(get
     db.commit()
     db.refresh(db_participant)
     return db_participant
-
 
 @app.post("/api/v1/questionnaire")
 def get_questionnaire(data: dict, db: Session = Depends(get_db)):
@@ -55,7 +65,6 @@ def get_questionnaire(data: dict, db: Session = Depends(get_db)):
         })
     return {"questions": questions}
 
-
 @app.post("/api/v1/answers/")
 def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
     db_answer = Answer(**answer.dict())
@@ -63,4 +72,3 @@ def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_answer)
     return {"status": "success", "id": db_answer.id}
-
