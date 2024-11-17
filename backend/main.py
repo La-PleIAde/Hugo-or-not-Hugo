@@ -5,7 +5,7 @@ from starlette_admin.contrib.sqla import Admin, ModelView
 
 from backend.database import SessionLocal, engine
 from backend.db_models import Base, Participant, Answer, Question, Paragraph
-from backend.questionnaire import Questionnaire
+from backend.models import Questionnaire
 from backend.schemas import ParticipantCreate, AnswerCreate
 
 app = FastAPI()
