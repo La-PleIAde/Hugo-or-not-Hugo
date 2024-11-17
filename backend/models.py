@@ -94,7 +94,7 @@ class Paragraph(AutoIncrementModel):
         file = random.choice(files)
 
         with open(os.path.join(directory, file), 'r', encoding='utf-8') as f:
-            text = f.read().strip()
+            text = f.read().strip().replace("[MASK]", "[MASQUE]")
 
         author = Author.genai if category != ParagraphCategory.hugo else Author[file.split('_')[0]]
 
