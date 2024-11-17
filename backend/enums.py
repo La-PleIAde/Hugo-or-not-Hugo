@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class AgeInterval(str, Enum):
-    _18_or_less = "17 ans ou moins"
+    _17_or_less = "17 ans ou moins"
     _18_20 = "18-20"
     _21_29 = "21-29"
     _30_39 = "30-39"
@@ -22,7 +22,7 @@ class EducationLevel(str, Enum):
 
 class HugoStyleFamiliarity(str, Enum):
     _1 = "Très peu familier"
-    _2 = "Peu familier"
+    _2 = "Un peu familier"
     _3 = "Neutre"
     _4 = "Familier"
     _5 = "Très familier"

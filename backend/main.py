@@ -14,7 +14,7 @@ app = FastAPI()
 Base.metadata.create_all(bind=engine)
 
 # Create admin
-admin = Admin(engine, title="Example: SQLAlchemy")
+admin = Admin(engine, title="Database admin page")
 
 # Add view
 admin.add_view(ModelView(Participant))
