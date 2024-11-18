@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from starlette_admin.contrib.sqla import Admin, ModelView
+import os
 
-from backend.database import SessionLocal, engine
+from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
+
+from backend.database import SessionLocal, engine, DB_PATH
 from backend.db_models import Base, Participant, Answer, Question, Paragraph
 from backend.models import Questionnaire
 from backend.schemas import ParticipantCreate, AnswerCreate
@@ -12,18 +14,6 @@ app = FastAPI()
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
-
-# Create admin
-admin = Admin(engine, title="Database admin page")
-
-# Add view
-admin.add_view(ModelView(Participant))
-admin.add_view(ModelView(Answer))
-admin.add_view(ModelView(Question))
-admin.add_view(ModelView(Paragraph))
-
-# Mount admin to your app
-admin.mount_to(app)
 
 # Add CORS middleware
 app.add_middleware(
@@ -41,6 +31,13 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# Admin authentication dependency
+ADMIN_KEY = os.getenv("ADMIN_KEY", "root")
+
+def admin_required(admin_key: str = Header(...)):
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Admin access required")
 
 @app.post("/api/v1/participants/")
 def create_participant(participant: ParticipantCreate, db: Session = Depends(get_db)):
@@ -104,3 +101,12 @@ def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_answer)
     return {"status": "success", "id": db_answer.id}
+
+@app.get("/api/v1/download-db", dependencies=[Depends(admin_required)])
+def download_db():
+    """
+    Endpoint to download the database file. Only accessible to admins.
+    """
+    if not os.path.exists(DB_PATH):
+        raise HTTPException(status_code=404, detail="Database file not found")
+    return FileResponse(DB_PATH, media_type="application/octet-stream", filename="database.db")
