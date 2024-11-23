@@ -124,7 +124,7 @@ class Question(AutoIncrementModel):
             p_category = random.choice(list(ParagraphCategory))
             p1 = Paragraph.from_category(p_category)
             p2 = Paragraph.from_category(p_category)
-        elif category == QuestionCategory.D:
+        elif category in [QuestionCategory.D, QuestionCategory.B]:
             source_paragraph = Paragraph.from_category(ParagraphCategory.hugo, used_files=used_files)
             source_id = int(source_paragraph.file.split('_')[-1].split('.')[0])
             restored_paragraph = Paragraph.from_category_with_postfix(ParagraphCategory.restored, source_id)
