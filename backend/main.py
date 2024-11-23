@@ -175,7 +175,7 @@ participant_app.add_middleware(
     CORSMiddleware,
     allow_origins=participant_origins,
     allow_credentials=True,
-    allow_methods=["POST"],  # Only POST for participant endpoints
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -183,7 +183,7 @@ admin_app.add_middleware(
     CORSMiddleware,
     allow_origins=admin_origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods for admin endpoints
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
