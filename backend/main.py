@@ -6,6 +6,7 @@ from sqlalchemy import and_
 
 from backend.database import SessionLocal, engine
 from backend.db_models import Base, Participant, Answer, Question, Paragraph
+from backend.models import Questionnaire
 from backend.schemas import ParticipantCreate, AnswerCreate
 
 # Initialize FastAPI apps for participants and admins
