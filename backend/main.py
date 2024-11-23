@@ -1,28 +1,22 @@
 import os
-
-from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi import FastAPI, HTTPException, Depends, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 
-from backend.database import SessionLocal, engine, DB_PATH
+from backend.database import SessionLocal, engine
 from backend.db_models import Base, Participant, Answer, Question, Paragraph
-from backend.models import Questionnaire
 from backend.schemas import ParticipantCreate, AnswerCreate
 
+# Initialize FastAPI apps for participants and admins
+participant_app = FastAPI()
+admin_app = FastAPI()
+
+# Create main FastAPI instance
 app = FastAPI()
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins. Replace with specific origins in production.
-    allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
-    allow_headers=["*"],  # Allow all headers
-)
 
 # Dependency to get DB session
 def get_db():
@@ -39,7 +33,11 @@ def admin_required(admin_key: str = Header(...)):
     if admin_key != ADMIN_KEY:
         raise HTTPException(status_code=403, detail="Admin access required")
 
-@app.post("/api/v1/participants/")
+
+# ======================
+# Participant Endpoints
+# ======================
+@participant_app.post("/participants/")
 def create_participant(participant: ParticipantCreate, db: Session = Depends(get_db)):
     db_participant = Participant(**participant.model_dump())
     db.add(db_participant)
@@ -47,7 +45,8 @@ def create_participant(participant: ParticipantCreate, db: Session = Depends(get
     db.refresh(db_participant)
     return db_participant
 
-@app.post("/api/v1/questionnaire")
+
+@participant_app.post("/questionnaire/")
 def get_questionnaire(data: dict, db: Session = Depends(get_db)):
     participant_id = data.get("participant_id")
     db_participant = db.query(Participant).filter(Participant.id == participant_id).first()
@@ -94,7 +93,8 @@ def get_questionnaire(data: dict, db: Session = Depends(get_db)):
 
     return {"questions": questions}
 
-@app.post("/api/v1/answers/")
+
+@participant_app.post("/answers/")
 def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
     db_answer = Answer(**answer.model_dump())
     db.add(db_answer)
@@ -102,11 +102,92 @@ def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
     db.refresh(db_answer)
     return {"status": "success", "id": db_answer.id}
 
-@app.get("/api/v1/download-db", dependencies=[Depends(admin_required)])
-def download_db():
-    """
-    Endpoint to download the database file. Only accessible to admins.
-    """
-    if not os.path.exists(DB_PATH):
-        raise HTTPException(status_code=404, detail="Database file not found")
-    return FileResponse(DB_PATH, media_type="application/octet-stream", filename="database.db")
+
+# ==================
+# Admin Endpoints
+# ==================
+@admin_app.get("/participants/", dependencies=[Depends(admin_required)])
+def list_participants(
+    db: Session = Depends(get_db),
+    age: str = Query(None),
+    education: str = Query(None)
+):
+    filters = []
+    if age:
+        filters.append(Participant.age == age)
+    if education:
+        filters.append(Participant.education == education)
+
+    participants = db.query(Participant).filter(and_(*filters)).all()
+    return participants
+
+
+@admin_app.get("/paragraphs/", dependencies=[Depends(admin_required)])
+def list_paragraphs(
+    db: Session = Depends(get_db),
+    category: str = Query(None),
+    author: str = Query(None)
+):
+    filters = []
+    if category:
+        filters.append(Paragraph.category == category)
+    if author:
+        filters.append(Paragraph.author == author)
+
+    paragraphs = db.query(Paragraph).filter(and_(*filters)).all()
+    return paragraphs
+
+
+@admin_app.get("/questions/", dependencies=[Depends(admin_required)])
+def list_questions(
+    db: Session = Depends(get_db),
+    category: str = Query(None)
+):
+    filters = []
+    if category:
+        filters.append(Question.category == category)
+
+    questions = db.query(Question).filter(and_(*filters)).all()
+    return questions
+
+
+@admin_app.get("/answers/", dependencies=[Depends(admin_required)])
+def list_answers(
+    db: Session = Depends(get_db),
+    participant_id: int = Query(None),
+    question_id: int = Query(None)
+):
+    filters = []
+    if participant_id:
+        filters.append(Answer.participant_id == participant_id)
+    if question_id:
+        filters.append(Answer.question_id == question_id)
+
+    answers = db.query(Answer).filter(and_(*filters)).all()
+    return answers
+
+
+# Add domain-specific CORS settings
+participant_origins = ["https://hugo-or-not-hugo.netlify.app"]
+admin_origins = ["https://hugo-admin.netlify.app"]
+
+participant_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=participant_origins,
+    allow_credentials=True,
+    allow_methods=["POST"],  # Only POST for participant endpoints
+    allow_headers=["*"],
+)
+
+admin_app.add_middleware(
+    CORSMiddleware,
+    allow_origins=admin_origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods for admin endpoints
+    allow_headers=["*"],
+)
+
+
+# Mount sub-applications
+app.mount("/api/v1/participant", participant_app)
+app.mount("/api/v1/admin", admin_app)
