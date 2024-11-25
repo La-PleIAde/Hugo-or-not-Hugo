@@ -39,7 +39,7 @@ def admin_required(admin_key: str = Header(...)):
 # Participant Endpoints
 # ======================
 @participant_app.post("/participants/")
-def create_participant(participant: ParticipantCreate, db: Session = Depends(get_db)):
+async def create_participant(participant: ParticipantCreate, db: Session = Depends(get_db)):
     db_participant = Participant(**participant.model_dump())
     db.add(db_participant)
     db.commit()
@@ -48,7 +48,7 @@ def create_participant(participant: ParticipantCreate, db: Session = Depends(get
 
 
 @participant_app.post("/questionnaire/")
-def get_questionnaire(data: dict, db: Session = Depends(get_db)):
+async def get_questionnaire(data: dict, db: Session = Depends(get_db)):
     participant_id = data.get("participant_id")
     db_participant = db.query(Participant).filter(Participant.id == participant_id).first()
     if not db_participant:
@@ -96,7 +96,7 @@ def get_questionnaire(data: dict, db: Session = Depends(get_db)):
 
 
 @participant_app.post("/answers/")
-def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
+async def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
     db_answer = Answer(**answer.model_dump())
     db.add(db_answer)
     db.commit()
@@ -108,7 +108,7 @@ def submit_answer(answer: AnswerCreate, db: Session = Depends(get_db)):
 # Admin Endpoints
 # ==================
 @admin_app.get("/participants/", dependencies=[Depends(admin_required)])
-def list_participants(
+async def list_participants(
     db: Session = Depends(get_db),
     age: str = Query(None),
     education: str = Query(None)
@@ -124,7 +124,7 @@ def list_participants(
 
 
 @admin_app.get("/paragraphs/", dependencies=[Depends(admin_required)])
-def list_paragraphs(
+async def list_paragraphs(
     db: Session = Depends(get_db),
     category: str = Query(None),
     author: str = Query(None)
@@ -140,7 +140,7 @@ def list_paragraphs(
 
 
 @admin_app.get("/questions/", dependencies=[Depends(admin_required)])
-def list_questions(
+async def list_questions(
     db: Session = Depends(get_db),
     category: str = Query(None)
 ):
@@ -153,7 +153,7 @@ def list_questions(
 
 
 @admin_app.get("/answers/", dependencies=[Depends(admin_required)])
-def list_answers(
+async def list_answers(
     db: Session = Depends(get_db),
     participant_id: int = Query(None),
     question_id: int = Query(None)
