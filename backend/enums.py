@@ -22,9 +22,9 @@ class EducationLevel(str, Enum):
 
 class HugoStyleFamiliarity(str, Enum):
     _1 = "Très peu familier"
-    _2 = "Un peu familier"
+    _2 = "Peu familier"
     _3 = "Neutre"
-    _4 = "Familier"
+    _4 = "Un peu amilier"
     _5 = "Très familier"
 
 
