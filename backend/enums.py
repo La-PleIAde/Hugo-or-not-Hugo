@@ -24,7 +24,7 @@ class HugoStyleFamiliarity(str, Enum):
     _1 = "Très peu familier"
     _2 = "Peu familier"
     _3 = "Neutre"
-    _4 = "Un peu amilier"
+    _4 = "Un peu familier"
     _5 = "Très familier"
 
 
